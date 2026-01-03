@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FocusGrow 🌱</title>
+<style>
+/* ================= GLOBAL ================= */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(120deg,#a8e063,#56ab2f);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden { display: none; }
+
+.card {
+  background: white;
+  padding: 25px;
+  width: 90%;
+  max-width: 360px;
+  border-radius: 16px;
+  text-align: center;
+  animation: fadeIn 1s ease;
+}
+
+/* DARK MODE */
+.dark { background: #121212; color: white; }
+.dark .card { background: #1e1e1e; }
+
+/* INPUTS */
+input, select { width: 95%; padding: 10px; margin: 8px 0; }
+
+/* BUTTONS */
+button {
+  padding: 10px 20px;
+  margin: 6px;
+  border: none;
+  border-radius: 8px;
+  background: #56ab2f;
+  color: white;
+  cursor: pointer;
+}
+button:hover { background: #3e8e41; }
+button:active { transform: scale(0.95); }
+
+/* TODO LIST */
+ul { list-style: none; padding: 0; }
+li { background: #e8f5e9; margin: 5px; padding: 8px; border-radius: 6px; cursor: pointer; }
+li:hover { background: #c8e6c9; }
+
+/* POMODORO */
+#timer { font-size: 36px; margin: 10px; }
+
+/* PLANT STAGES */
+.plant {
+  margin: 20px auto;
+  width: 60px;
+  border-radius: 0 0 20px 20px;
+  transition: all 1s;
+}
+.stage0 { height: 20px; background: brown; }
+.stage1 { height: 60px; background: green; }
+.stage2 { height: 100px; background: green; }
+.stage3 { height: 150px; background: darkgreen; }
+
+/* CONFETTI */
+.confetti {
+  position: fixed;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  animation: fall 3s linear;
+}
+@keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+
+/* ANIMATION */
+@keyframes fadeIn { from { opacity:0; transform: scale(0.9);} to {opacity:1; transform: scale(1);} }
+
+/* MOBILE */
+@media (max-width:600px) { .card { width: 95%; } }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="card" id="loginPage">
+  <h1>🌱 FocusGrow</h1>
+  <p id="quote"></p>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="signup()">Create Account</button>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div class="card hidden" id="dashboardPage">
+  <h2>Dashboard 🌟</h2>
+  <p>🔥 Focus Streak: <span id="streak">0</span></p>
+  <button onclick="showPage('todo')">📝 To-Do</button>
+  <button onclick="showPage('pomodoro')">⏱ Pomodoro</button>
+  <button onclick="toggleDark()">🌙 Dark Mode</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- ================= TODO ================= -->
+<div class="card hidden" id="todoPage">
+  <h2>Tasks ✅</h2>
+  <input id="task" placeholder="New task">
+  <select id="priority">
+    <option>🌱 Low</option>
+    <option>⚡ Medium</option>
+    <option>🔥 High</option>
+  </select>
+  <button onclick="addTask()">Add Task</button>
+  <ul id="list"></ul>
+  <button onclick="showPage('dashboard')">⬅ Back</button>
+</div>
+
+<!-- ================= POMODORO ================= -->
+<div class="card hidden" id="pomodoroPage">
+  <h2>Pomodoro ⏱</h2>
+  <div id="timer">25:00</div>
+  <div id="plant" class="plant stage0"></div>
+  <button onclick="startPomodoro()">Start Focus</button>
+  <button onclick="toggleMusic()">🎵 Music</button>
+  <audio id="music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/10/30/audio_9d2dc7b2b4.mp3">
+  </audio>
+  <button onclick="showPage('dashboard')">⬅ Back</button>
+</div>
+
+<script>
+// ================= QUOTES =================
+const quotes = [
+  "Grow focus, grow life 🌱",
+  "Discipline beats motivation 💪",
+  "Small steps every day 🔥"
+];
+document.getElementById("quote").innerText = quotes[Math.floor(Math.random()*quotes.length)];
+
+// ================= PAGES =================
+function showPage(page){
+  loginPage.classList.add("hidden");
+  dashboardPage.classList.add("hidden");
+  todoPage.classList.add("hidden");
+  pomodoroPage.classList.add("hidden");
+
+  if(page==='dashboard') dashboardPage.classList.remove("hidden");
+  if(page==='todo') todoPage.classList.remove("hidden");
+  if(page==='pomodoro') pomodoroPage.classList.remove("hidden");
+}
+
+// ================= LOGIN =================
+function signup(){
+  localStorage.setItem(user.value, pass.value);
+  alert("Account Created 🎉");
+}
+function login(){
+  if(localStorage.getItem(user.value)===pass.value){
+    showPage('dashboard');
+    updateStreak();
+  } else alert("Invalid login ❌");
+}
+function logout(){ showPage('login'); }
+
+// ================= STREAK =================
+let streak = localStorage.getItem("streak") || 0;
+function updateStreak(){ document.getElementById("streak").innerText = streak; }
+
+// ================= TODO =================
+function addTask(){
+  let li=document.createElement("li");
+  li.innerText=`${priority.value} ${task.value}`;
+  li.onclick=()=>li.style.textDecoration="line-through";
+  list.appendChild(li);
+  task.value="";
+}
+
+// ================= DARK MODE =================
+function toggleDark(){ document.body.classList.toggle("dark"); }
+
+// ================= POMODORO =================
+let time=25*60, interval;
+function startPomodoro(){
+  clearInterval(interval);
+  time=25*60;
+  plant.className="plant stage0";
+  interval=setInterval(()=>{
+    time--;
+    updateTimer();
+    growPlant();
+    if(time===0){
+      clearInterval(interval);
+      streak++;
+      localStorage.setItem("streak",streak);
+      updateStreak();
+      confetti();
+      alert("🎉 Focus session complete!");
+    }
+  },1000);
+}
+function updateTimer(){ 
+  let m=Math.floor(time/60); 
+  let s=time%60; 
+  timer.innerText=`${m}:${s<10?'0':''}${s}`;
+}
+function growPlant(){
+  if(time===20*60) plant.className="plant stage1";
+  if(time===10*60) plant.className="plant stage2";
+  if(time===5*60) plant.className="plant stage3";
+}
+
+// ================= CONFETTI =================
+function confetti(){
+  for(let i=0;i<80;i++){
+    let c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=`hsl(${Math.random()*360},100%,50%)`;
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
+}
+
+// ================= MUSIC =================
+function toggleMusic(){ music.paused?music.play():music.pause(); }
+</script>
+
+</body>
+</html>
